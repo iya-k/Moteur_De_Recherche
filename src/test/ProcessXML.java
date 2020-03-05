@@ -26,7 +26,8 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 
-public class ProcessXML {
+public class ProcessXML
+{
 	private Element root;
 	private Document xmlSortie ;
 	private Document xmlDocument;
