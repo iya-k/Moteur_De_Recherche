@@ -2,16 +2,22 @@ package test;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -19,169 +25,109 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-public class Traitement {
-	private static Element racine;
-	private static Element racineSortie;
-	static Document xmlSortie ;
-	static OutputStream out;
-	static PrintWriter writer;
-    private static ArrayList<String> dico;
-    private static LinkedHashMap<String, Integer> occurences;
 
-   public static void main(String[] args) {
-      // Nous récupérons une instance de factory qui se chargera de nous fournir
-      // un parseur
-      DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-      dico = new ArrayList<>();
-      occurences = new LinkedHashMap<>();
+public class ProcessXML {
+	private Element root;
+	private Document xmlSortie ;
+	private Document xmlDocument;
+	private DocumentBuilder builder;
 
-      try {
-         // Création de notre parseur via la factory
-         DocumentBuilder builder = factory.newDocumentBuilder();
-         File fileXML = new File("frwiki-debut.xml");
-         
-         System.out.println(fileXML);
-         // parsing de notre fichier via un objet File et récupération d'un
-         // objet Document
-         // Ce dernier représente la hiérarchie d'objet créée pendant le parsing
-         Document xml = builder.parse(fileXML);
-
-         // Via notre objet Document, nous pouvons récupérer un objet Element
-         // Ce dernier représente un élément XML mais, avec la méthode ci-dessous,
-         // cet élément sera la racine du document
-         racine = xml.getDocumentElement();
-
-         xmlSortie = builder.newDocument();
-         racineSortie = xmlSortie.getDocumentElement();
-         
-         //newRacine = sortie.createElement("mediawiki");
-         //sortie.appendChild(newRacine);
-         
-		 //out = new FileOutputStream("fileXML.xml");
-		 writer = creerFichier("sortie.txt");
-         if(fileXML != null) {
-
-             traitement();
-         }
-         
-         //serializetoXML(out, "utf-8", sortie);
-         
-         //afficheALL(taille);
-
-      } catch (ParserConfigurationException e) 
-      {
-         e.printStackTrace();
-         System.out.println("Erreur ParserConfiguration");
-      } catch (FileNotFoundException e) {
-    	  System.out.println("Erreur Création du fichier");
-		e.printStackTrace();
-	} catch (SAXException e) {
-		System.out.println("builder.parse(fileXML)");
-		e.printStackTrace();
-	} catch (IOException e) {
-		System.out.println("builder.parse(fileXML)");
-		e.printStackTrace();
-	}
-   }
-   
-   static void traitement()
-   {
-	   NodeList list = racine.getElementsByTagName("page");//getNodeName()) = page
-	   
-	   for(int i = 0; i < list.getLength(); i++)
-	   {
-		   Node page = list.item(i).cloneNode(true);
-		   NodeList contenuPage = page.getChildNodes();
-		   for(int j = 0; j < contenuPage.getLength(); j++)
-		   {
-			   Node revision = contenuPage.item(j).cloneNode(true);
-			   if(revision.getNodeName().equals("revision")) 
-			   {
-				   NodeList contenuRevision = revision.getChildNodes();
-				   for(int t = 0; t < contenuRevision.getLength(); t++)
-				   {
-					   Node text = contenuRevision.item(t).cloneNode(true); 
-					   if(text.getNodeName().equals("text") && (text.getTextContent().contains(" Sport") 
-							   || text.getTextContent().contains(" sport"))) 
-					   {
-							
-							  System.out.println(list.item(i).getNodeName());
-							  System.out.println("--"+revision.getNodeName());
-							  System.out.println("----"+text.getNodeName());
-							 
-						   
-						   //newRacine.appendChild(page);
-						   
-						   racineSortie.appendChild(page);
-						   	enregistreTxt(writer, page.getNodeName());
-							enregistreTxt(writer, revision.getNodeName());
-							enregistreTxt(writer, text.getNodeName());
-							enregistreTxt(writer, text.getTextContent());
-							/*
-							String[] texts = text.getTextContent().split(" ");
-							for(int indice = 0; indice < texts.length; indice++)
-							{
-								enregistreHashMap(texts[indice]);
-							}
-						   */
-						   
-					   }
-					  
-				   }//for contenuRevision
-			   }
-		   }//for contenuPage
-		   
-	   }//for list 
-	   
-   }
-   
-	static void enregistre(String fichier)
+	private List<Element> pages;
+	private String path, outFile;
+	
+	public ProcessXML(String pathname, String fileOut)
 	{
-		//On utilise ici un affichage classique avec getPrettyFormat()
-		//XMLOutputter out = new XMLOutputter(Format.getPrettyFormat());
-		//Remarquez qu'il suffit simplement de créer une instance de FileOutputStream
-		//avec en argument le nom du fichier pour effectuer la sérialisation.
-		
-		//out.output(sortie, new FileOutputStream(fichier));
-	}
-	static PrintWriter creerFichier(String path)
-	{
-		PrintWriter wr = null;
-		try {
-			wr = new PrintWriter(path);
-		} catch (FileNotFoundException e) {
-			
-			e.printStackTrace();
-		}
-		return  wr;
-	}
-	static void enregistreTxt(PrintWriter writer, Object toSave)
-	{
-		writer.println(toSave);
-		writer.flush();
+		path = pathname;
+		outFile = fileOut;
+		pages = new ArrayList<>();
 
-	}
-
-	static void enregistreDico(String chaine)
-	{
-		dico = (ArrayList<String>) occurences.keySet();
-		dico.sort(String::compareToIgnoreCase);
-		//String::compareToIgnoreCase
-		System.out.println(dico.size());
-
-	}
-	static void enregistreHashMap(String chaine)
-	{
-		System.out.println(chaine);
-		if(occurences.containsKey(chaine.toLowerCase()))
-		{
-			occurences.replace(chaine, occurences.get(chaine), occurences.get(chaine)+1);
-		}
-		else
-		{
-			occurences.put(chaine, 1);
-		}
-		
 	}
 	
+	/**
+	 * @return the pages
+	 */
+	public List<Element> getPages() 
+	{
+		return pages;
+	}
+	public Element loadDocument(String pathname)
+	{
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+
+		try {
+			//factory.setValidating(true);
+			// Création de notre parseur via la factory
+			builder = factory.newDocumentBuilder();
+			File fileXML = new File(pathname);
+			
+			// parsing de notre fichier via un objet File et récupération d'un objet Document
+			// Ce dernier représente la hiérarchie d'objet créée pendant le parsing
+			xmlDocument = builder.parse(fileXML);
+
+			// Via notre objet Document, nous pouvons récupérer un objet Element
+			// Ce dernier représente un élément XML mais, avec la méthode ci-dessous, cet élément sera la racine du document
+			root = xmlDocument.getDocumentElement();
+
+
+		} catch (ParserConfigurationException e) {
+			e.printStackTrace();
+			System.out.println("Erreur ParserConfiguration");
+		} catch (FileNotFoundException e) {
+			System.out.println("Erreur Création du fichier");
+			e.printStackTrace();
+		} catch (SAXException e) {
+			System.out.println("builder.parse(fileXML)");
+			e.printStackTrace();
+		} catch (IOException e) {
+			System.out.println("builder.parse(fileXML)");
+			e.printStackTrace();
+		}
+		return root;
+	}
+
+
+	public void createXMLDocument(List<Element> pages)
+	{
+		xmlSortie = builder.newDocument();
+		
+		xmlSortie.setXmlVersion("1.0");
+		xmlSortie.setXmlStandalone(true);
+		xmlSortie.appendChild(xmlSortie.createElement("mediawiki"));
+		int i = 0;
+		while(i < pages.size())
+		{
+			Node copyPage = xmlSortie.importNode(pages.get(i), true);
+			xmlSortie.getDocumentElement().appendChild(copyPage);
+			i++;
+		}
+
+	}
+	protected void writeXML()
+	{
+		createXMLDocument(pages);
+		
+		//write the new document in a XML file
+		try {
+			TransformerFactory transFactory = TransformerFactory.newDefaultInstance();
+			Transformer transf = transFactory.newTransformer();
+			DOMSource source = new DOMSource(xmlSortie);
+			StreamResult result = new StreamResult(new File(outFile));
+
+			transf.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+			transf.setOutputProperty(OutputKeys.INDENT, "yes");
+			transf.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+			
+			transf.transform(source, result);
+
+		} catch (TransformerConfigurationException e) {
+			System.out.println("transFactory.newTransformer()");
+			e.printStackTrace();
+		} catch (TransformerException e) {
+			System.out.println("Erreur transform.transform");
+			e.printStackTrace();
+		}
+
+	}
+	
+
 }
