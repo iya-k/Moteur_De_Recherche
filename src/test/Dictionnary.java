@@ -1,35 +1,91 @@
 package test;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.text.Normalizer;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
-public class Dictionnary 
+import utils.Commons;
+
+public class Dictionnary extends Commons
 {
-
+	BufferedReader buffer ;
 	private ArrayList<String> dico;
-	private  LinkedHashMap<String, Integer> occurences;
+	private  HashMap<String, Integer> occurences;
+	static final int TAILLE_DICO = 100;
+	static List<String> emptyWords;
+	PrintWriter writer;
+	String fileIn;
+	String fileOut;
+	static final String pathStopWord = "./resources/stopWords.txt";
 
-	public Dictionnary()
+	public Dictionnary(String fileIn,String fileOut)
 	{
-
+		occurences = new HashMap<String, Integer>();
 		dico = new ArrayList<>();
-		occurences = new LinkedHashMap<>();
-		
+		writer = super.createFile(pathStopWord);
+		//emptyWords = new String["",""];
+		this.fileIn = fileIn;
+		this.fileOut = fileOut;
 	}
 	
-	
-	protected void enregistreDico(String chaine)
+	public static void main(String[] args) 
 	{
-		dico = (ArrayList<String>) occurences.keySet();
-		dico.sort(String::compareToIgnoreCase);
-		//String::compareToIgnoreCase
-		System.out.println(dico.size());
-
+		new Dictionnary("./resources/sortie.txt", "./resources/dico.txt").generateDictionnary();
 	}
-	protected void enregistreHashMap(String chaine)
+	
+	public void generateDictionnary()
 	{
-		System.out.println(chaine);
-		if(occurences.containsKey(chaine.toLowerCase()))
+		String ligne;
+			
+			buffer = super.readFile(fileIn);
+			
+			String[] words = null;
+			
+			try {
+				while((ligne = buffer.readLine()) != null)
+				{
+					words = Arrays.asList(ligne.replaceAll("[^a-zA-Zçéèàêôîûöüïäù]", " ")
+							.split(" "))
+							.stream().filter(x -> x.length()>1).toArray(String[]::new);
+					
+					//System.out.println(sentence);
+					 for(String word: words)
+					 {
+						 //System.out.println(word);
+						 generateHashMap(word);
+					 }
+				}
+			} catch (IOException e) {
+				System.out.println("Erreur buffer.readLine() ");
+				e.printStackTrace();
+			}
+			createDico();
+			
+			sort();//trier le dictionnaire
+			
+			try {
+				buffer.close();
+			} catch (IOException e) {
+			}
+	}
+	private void generateHashMap(String chaine)
+	{
+		if(occurences.containsKey(chaine))
 		{
 			occurences.replace(chaine, occurences.get(chaine), occurences.get(chaine)+1);
 		}
@@ -38,5 +94,103 @@ public class Dictionnary
 			occurences.put(chaine, 1);
 		}
 
+	}
+	/*
+	 * 1. Dresser la liste des mots sur lesquels pourront porter les requêtes de l’utilisateur
+	 * pourra par exemple prendre les 10000 mots les plus fréquents apparaissant dans le corpus,
+	 *  dont tous ceux contenus dans le titre des pages.
+	 */
+	
+	private void createDico()
+	{	
+		//trier le map
+		occurences = occurences.entrySet().stream().sorted(Map.Entry.comparingByValue()).collect(Collectors.toMap(
+                				Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+		
+		for(Entry<String, Integer> mapping : occurences.entrySet())
+		{
+			if(mapping.getKey().length() < 3)
+			{
+				 super.stringToWrite(writer, mapping.getKey());
+			}
+			//System.out.println(mapping.getKey() + " ==> " + mapping.getValue());
+		}
+		
+        String words[] = Arrays.copyOfRange(occurences.keySet().toArray(new String[occurences.size()]),
+        																occurences.keySet().size()-TAILLE_DICO, occurences.keySet().size());
+        dico.addAll(Arrays.asList(words));
+  /*      
+		int i = 0;
+		while(i < dico.size() )
+		{
+			System.out.println(dico.get(i));
+			i++;
+		}
+*/
+	}
+	
+	//2. Supprimer de la liste les mots « vides » (petits mots non discriminants) comme le, la, un, de, sa, etc. 
+	protected void removedStopWords()
+	{
+		String word;
+		buffer = super.readFile(pathStopWord);
+		
+		List<String> words = new ArrayList<String>();
+		
+		try {
+			while((word = buffer.readLine()) != null)
+			{
+				 words.add(word);
+			}
+			dico.removeAll(words);
+		} catch (IOException e) {
+			System.out.println("Erreur buffer.readLine() ");
+			e.printStackTrace();
+		}
+	}
+	
+	//3. Supprimer les accents, les majuscules et les redondances.
+	protected void stripAccents()
+	{
+		removedStopWords();
+		
+		List<String> words = new ArrayList<String>();
+		for(String s: dico)
+		{
+			String temp = Normalizer.normalize(s, Normalizer.Form.NFD);
+			Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");//supprime les accents
+			String t = (pattern.matcher(temp).replaceAll("")).toLowerCase();//transforme en miniscule
+			if(dico.contains(t))
+			{
+				words.add(s);
+			}
+		}
+		dico.removeAll(words);
+		/*
+		int i = 0;
+		while(i < dico.size() )
+		{
+			System.out.println(dico.get(i));
+			i++;
+		}
+		/*
+		 * String retour = pattern.matcher(temp).replaceAll("");
+		 * retour.replaceAll("[^A-Za-z]", " ");
+		 * return retour.replaceAll("[^A-Za-z]", " ").toLowerCase();//transforme en miniscule
+		 */
+		//return 
+	}
+	//4. Trier cette liste par ordre alphabétique.
+
+	public void sort()
+	{
+		stripAccents();
+		Collections.sort(dico);
+		int i = 0;
+		while(i < dico.size() )
+		{
+			System.out.println(dico.get(i));
+			i++;
+		}
 	}
 }
