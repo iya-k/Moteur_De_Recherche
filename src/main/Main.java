@@ -1,18 +1,20 @@
-package test;
+package main;
 
-public class Main {
+import test.Corpus;
+import test.Dictionnary;
+import test.ProcessXML;
+import utils.Commons;
 
-	
+public class Main extends Commons
+{	
 	public static void main(String[] args) 
 	{
 		String path = "./resources/frwiki-debut.xml";//fichier source
 		String outFile = "./resources/corpus.xml";//fichier destination
 		String category = "sport";
-		
-		ProcessXML proc = new ProcessXML(path, outFile);//traitement du fichier
-		Corpus corps = new Corpus(category, proc.loadDocument(path), proc.getPages());//nettoyage et selection
-		corps.traitement();
-		proc.writeXML();
+		Corpus corps = new Corpus(path, outFile);//nettoyage et selection
+		//Dictionnary dico = new Dictionnary();
+		//dico.generateDictionnary("./resources/sortie.txt");
 
 	}
 	   

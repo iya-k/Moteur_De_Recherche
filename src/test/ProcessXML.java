@@ -3,9 +3,7 @@ package test;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -22,11 +20,12 @@ import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import utils.Commons;
 
-public class ProcessXML
+
+public abstract class ProcessXML extends Commons
 {
 	private Element root;
 	private Document xmlSortie ;
@@ -34,14 +33,13 @@ public class ProcessXML
 	private DocumentBuilder builder;
 
 	private List<Element> pages;
-	private String path, outFile;
+	private String pathname, outFile;
 	
-	public ProcessXML(String pathname, String fileOut)
+	public ProcessXML(String path, String fileOut)
 	{
-		path = pathname;
+		pathname = path;
 		outFile = fileOut;
 		pages = new ArrayList<>();
-
 	}
 	
 	/**
@@ -51,7 +49,7 @@ public class ProcessXML
 	{
 		return pages;
 	}
-	public Element loadDocument(String pathname)
+	public Element loadDocument()
 	{
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
@@ -129,6 +127,5 @@ public class ProcessXML
 		}
 
 	}
-	
 
 }

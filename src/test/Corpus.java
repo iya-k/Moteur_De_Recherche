@@ -9,26 +9,29 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-public class Corpus
+public class Corpus extends ProcessXML
 {
 	PrintWriter writer;
 	private List<Element> pages;
 	String category;
 	Element racine;
 	int size;
+	String filter = "sport";
+	String delim = "-----------------------------------------------------------------";
 	
-	public Corpus(String filter, Element root, List<Element> pages)
+	public Corpus(String pathname, String fileOut)
 	{
-		this.pages = pages;
-		racine = root;
-		category = filter;
+		super(pathname, fileOut);
 		
+		pages = super.getPages();
+		racine = super.loadDocument();
+		category = filter;
 	}
 
-	void traitement()
+	public void traitement()
 	{
 
-		writer = creerFichier("./resources/sortie.txt");
+		writer = super.createFile("./resources/sortie.txt");
 		//on recupère toutes les pages
 		NodeList listPages = racine.getElementsByTagName("page");//getNodeName()) = page
 		size = listPages.getLength();
@@ -37,8 +40,8 @@ public class Corpus
 		{
 			if(listPages.item(iPage) instanceof Element)
 			{
-
 				NodeList contenuPage = listPages.item(iPage).getChildNodes();
+				
 				for(int iRevision = 0; iRevision < contenuPage.getLength(); iRevision++)
 				{
 					if((contenuPage.item(iRevision) instanceof Element) && contenuPage.item(iRevision).getNodeName().equals("revision"))
@@ -49,44 +52,29 @@ public class Corpus
 							Node text = contenuRevision.item(iText); 
 							if((text instanceof Element) && 
 									text.getNodeName().equals("text") && (text.getTextContent().contains(category))) 
-							{
-
-								System.out.println(listPages.item(iPage).getNodeName());
-								System.out.println("--"+contenuPage.item(iRevision).getNodeName());
-								System.out.println("----"+text.getNodeName());
-
+							{	
 								pages.add((Element) listPages.item(iPage));
 
-								//enregistreTxt(writer, listPages.item(iPage).getNodeName());
-								//enregistreTxt(writer, contenuPage.item(iRevision).getNodeName());
-								
-								enregistreTxt(writer, text.getNodeName());
-								enregistreTxt(writer, sansAccent(text.getTextContent()));
-
-								/*
-								String[] texts = text.getTextContent().split(" ");
-								for(int indice = 0; indice < texts.length; indice++)
-								{
-									enregistreHashMap(texts[indice]);
-								}
-								 */
+								super.stringToWrite(writer, listPages.item(iPage).getFirstChild().getNextSibling().getTextContent());
+								super.stringToWrite(writer, text.getTextContent());
+								//enregistreTxt(writer, delim);
 
 							}//fin if text
 							
 
 						}//for contenuRevision
 					}
-					else if(contenuPage.item(iRevision).getNodeName().equals("revision"))
-					{
-						//racine.removeChild(listPages.item(iPage));
-					}
 				}//for contenuPage
 
 			}//fin if listPages.item(i)
 
 		}//for listPages 
+		
+		super.writeXML();
+		writer.close();
+		
 	}//traitement
-	
+	/*
 	protected PrintWriter creerFichier(String path)
 	{
 		PrintWriter wr = null;
@@ -98,17 +86,12 @@ public class Corpus
 		}
 		return  wr;
 	}
-	protected void enregistreTxt(PrintWriter writer, Object toSave)
+	
+	protected void enregistreTxt(PrintWriter writer, String toSave)
 	{
 		writer.println(toSave);
 		writer.flush();
 
-	}
-	protected String sansAccent (String s)
-	{
-		String temp = Normalizer.normalize(s, Normalizer.Form.NFD);
-		Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
-		return (pattern.matcher(temp).replaceAll(""));//.replaceAll("\\p{P}\\p{S}","");
-	}
+	}*/
 	
 }
