@@ -1,4 +1,4 @@
-package test;
+package tp1;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -32,25 +32,27 @@ public abstract class ProcessXML extends Commons
 	private Document xmlDocument;
 	private DocumentBuilder builder;
 
-	private List<Element> pages;
+	//private List<Element> pages;
 	private String pathname, outFile;
 	
 	public ProcessXML(String path, String fileOut)
 	{
 		pathname = path;
 		outFile = fileOut;
-		pages = new ArrayList<>();
+		//pages = new ArrayList<>();
 	}
 	
 	/**
 	 * @return the pages
-	 */
+	 *
 	public List<Element> getPages() 
 	{
 		return pages;
-	}
+	}*/
 	public Element loadDocument()
 	{
+
+		System.out.println("Chargement...");
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
 		try {
@@ -81,6 +83,7 @@ public abstract class ProcessXML extends Commons
 			System.out.println("builder.parse(fileXML)");
 			e.printStackTrace();
 		}
+		System.out.println("Fin du chargement");
 		return root;
 	}
 
@@ -93,6 +96,7 @@ public abstract class ProcessXML extends Commons
 		xmlSortie.setXmlStandalone(true);
 		xmlSortie.appendChild(xmlSortie.createElement("mediawiki"));
 		int i = 0;
+		System.out.println("Taille des pages "+pages.size());
 		while(i < pages.size())
 		{
 			Node copyPage = xmlSortie.importNode(pages.get(i), true);
@@ -101,13 +105,14 @@ public abstract class ProcessXML extends Commons
 		}
 
 	}
-	protected void writeXML()
+	protected void writeXML(List<Element> pages)
 	{
+		System.out.println("XML file: "+outFile);
 		createXMLDocument(pages);
 		
 		//write the new document in a XML file
 		try {
-			TransformerFactory transFactory = TransformerFactory.newDefaultInstance();
+			TransformerFactory transFactory = TransformerFactory.newInstance();
 			Transformer transf = transFactory.newTransformer();
 			DOMSource source = new DOMSource(xmlSortie);
 			StreamResult result = new StreamResult(new File(outFile));

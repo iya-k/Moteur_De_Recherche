@@ -1,8 +1,8 @@
 package main;
 
-import test.Corpus;
-import test.Dictionnary;
-import test.ProcessXML;
+import tp1.Corpus;
+import tp1.Dictionnary;
+import tp1.ProcessXML;
 import utils.Commons;
 
 public class Main extends Commons

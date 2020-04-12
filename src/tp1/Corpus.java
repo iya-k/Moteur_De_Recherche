@@ -1,7 +1,9 @@
-package test;
+package tp1;
+
 
 import java.io.*;
 import java.text.Normalizer;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -15,7 +17,7 @@ public class Corpus extends ProcessXML
 	private List<Element> pages;
 	String category;
 	Element racine;
-	int size;
+	static final int SIZE = 200000; 
 	String filter = "sport";
 	String delim = "-----------------------------------------------------------------";
 	
@@ -23,21 +25,29 @@ public class Corpus extends ProcessXML
 	{
 		super(pathname, fileOut);
 		
-		pages = super.getPages();
+		pages = new ArrayList<>();
 		racine = super.loadDocument();
 		category = filter;
+
+		System.out.println("Corpus");
 	}
 
 	public void traitement()
 	{
 
+		System.out.println("traitement");
 		writer = super.createFile("./resources/sortie.txt");
 		//on recupère toutes les pages
 		NodeList listPages = racine.getElementsByTagName("page");//getNodeName()) = page
-		size = listPages.getLength();
+		//SIZE = listPages.getLength();
 
-		for(int iPage = 0; iPage < size; iPage++)
+		//for(int iPage = 0; iPage < SIZE; iPage++)
+		int iPage = 0;
+		int cpt = 0;
+		//System.out.println(iPage);
+		while(cpt < SIZE && iPage < listPages.getLength())
 		{
+			//System.out.println(iPage);
 			if(listPages.item(iPage) instanceof Element)
 			{
 				NodeList contenuPage = listPages.item(iPage).getChildNodes();
@@ -56,21 +66,22 @@ public class Corpus extends ProcessXML
 								pages.add((Element) listPages.item(iPage));
 
 								super.stringToWrite(writer, listPages.item(iPage).getFirstChild().getNextSibling().getTextContent());
-								super.stringToWrite(writer, text.getTextContent());
+								//super.stringToWrite(writer, text.getTextContent());
 								//enregistreTxt(writer, delim);
+								
+								cpt++;
 
 							}//fin if text
-							
-
 						}//for contenuRevision
-					}
+					}//fin if
 				}//for contenuPage
 
 			}//fin if listPages.item(i)
+			iPage++;
 
 		}//for listPages 
 		
-		super.writeXML();
+		super.writeXML(pages);
 		writer.close();
 		
 	}//traitement
@@ -93,5 +104,27 @@ public class Corpus extends ProcessXML
 		writer.flush();
 
 	}*/
+	
+	public static void main(String[] args) 
+	{
+		String path = "./resources/frwiki-debut.xml";//fichier source
+		String outFile = "./resources/corpus.xml";//fichier destination
+		String category = "sport";
+
+		System.out.println("main");
+		long tempsDebut = System.nanoTime(); 
+		
+		new Corpus(path, outFile).traitement();//nettoyage et selection
+
+		long tempsFin = System.nanoTime(); 
+		double seconds = (tempsFin - tempsDebut) / 1e9; 
+		System.out.println("Opération effectuée en: "+ seconds + " secondes.");
+		
+		//Dictionnary dico = new Dictionnary();
+		//dico.generateDictionnary("./resources/sortie.txt");
+		System.out.println("Mémoire allouée : " + (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory()) + " octets");
+
+	}
+	
 	
 }

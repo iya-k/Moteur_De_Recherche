@@ -1,7 +1,13 @@
 package utils;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class Commons 
 {
@@ -10,6 +16,9 @@ public abstract class Commons
 	String CATEGORY = "sport";//category pour le filtrer
 	String DICO_FILE = "./resources/dico.txt";//dictionnaire
 	String STOP_WORDS = "./resources/stopWords.txt";//dictionnaire
+	BufferedReader buffer_reader ;
+	InputStream isR ;
+	InputStreamReader isrR;
 
 
 	
@@ -22,6 +31,7 @@ public abstract class Commons
 
 			e.printStackTrace();
 		}
+		System.out.println("fichier creer "+path);
 		return  wr;
 	}
 	
@@ -37,4 +47,17 @@ public abstract class Commons
 		writer.close();
 	}
 	
+	protected BufferedReader readFile(String path)
+	{	
+		try {
+			isR = new FileInputStream(path);
+		} catch (FileNotFoundException e) {
+			System.out.println("Erreur isR = new FileInputStream(filename) ");
+			e.printStackTrace();
+		}
+
+		isrR = new InputStreamReader(isR);
+		buffer_reader = new BufferedReader(isrR);
+		return  buffer_reader;
+	}
 }

@@ -1,4 +1,4 @@
-package test;
+package tp1;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -115,7 +115,6 @@ public class Dictionnary extends Commons
 			}
 			//System.out.println(mapping.getKey() + " ==> " + mapping.getValue());
 		}
-		
         String words[] = Arrays.copyOfRange(occurences.keySet().toArray(new String[occurences.size()]),
         																occurences.keySet().size()-TAILLE_DICO, occurences.keySet().size());
         dico.addAll(Arrays.asList(words));
@@ -128,14 +127,13 @@ public class Dictionnary extends Commons
 		}
 */
 	}
-	
 	//2. Supprimer de la liste les mots « vides » (petits mots non discriminants) comme le, la, un, de, sa, etc. 
 	protected void removedStopWords()
 	{
 		String word;
 		buffer = super.readFile(pathStopWord);
 		
-		List<String> words = new ArrayList<String>();
+		ArrayList<String> words = new ArrayList<String>();
 		
 		try {
 			while((word = buffer.readLine()) != null)
@@ -148,24 +146,30 @@ public class Dictionnary extends Commons
 			e.printStackTrace();
 		}
 	}
-	
 	//3. Supprimer les accents, les majuscules et les redondances.
-	protected void stripAccents()
+	protected ArrayList<String> stripAccents()
 	{
 		removedStopWords();
 		
-		List<String> words = new ArrayList<String>();
+		ArrayList<String> words = new ArrayList<String>();
 		for(String s: dico)
 		{
 			String temp = Normalizer.normalize(s, Normalizer.Form.NFD);
 			Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");//supprime les accents
 			String t = (pattern.matcher(temp).replaceAll("")).toLowerCase();//transforme en miniscule
-			if(dico.contains(t))
+			
+			
+			if(t.equals(s) && !words.contains(t))
 			{
-				words.add(s);
+				//System.out.println(s+"_____"+t);
+				words.add(t);
+			}
+			else if(!words.contains(t))
+			{
+				words.add(t);
+				//System.out.println("else _____"+s+"_____"+t);
 			}
 		}
-		dico.removeAll(words);
 		/*
 		int i = 0;
 		while(i < dico.size() )
@@ -178,19 +182,37 @@ public class Dictionnary extends Commons
 		 * retour.replaceAll("[^A-Za-z]", " ");
 		 * return retour.replaceAll("[^A-Za-z]", " ").toLowerCase();//transforme en miniscule
 		 */
-		//return 
+		return words;
 	}
 	//4. Trier cette liste par ordre alphabétique.
-
-	public void sort()
+	public ArrayList<String> sort()
 	{
-		stripAccents();
-		Collections.sort(dico);
+		ArrayList<String> sortedDico = stripAccents();
+		Collections.sort(sortedDico);
 		int i = 0;
-		while(i < dico.size() )
+		while(i < sortedDico.size() )
 		{
-			System.out.println(dico.get(i));
+			System.out.println(sortedDico.get(i));
 			i++;
 		}
+		return sortedDico;
+	}
+	//5. (Optionnel) Écrire une fonction permettant de trouver la « racine » des mots
+	public String getRootElement(String word)
+	{
+		/*
+		 * raciniser le texte d'un fichier du corpus.
+		 * protected static ArrayList<String> stemming(File file) throws IOException {
+		// RÃ©ponse complÃ¨te fournie
+		ArrayList<String> words = (new FrenchStemmer()).normalize(file);		
+		return words;
+		
+		return Jsoup
+		    	.connect("http://www.cnrtl.fr/definition/"+word).get()
+		    	.select("div#vtoolbar > ul > li#vitemselected > a > span")
+		    	.first().text().replaceAll("[\\d]","").toLowerCase();
+		    	
+		    	 */
+		return "";
 	}
 }
