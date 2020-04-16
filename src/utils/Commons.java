@@ -9,8 +9,12 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
+
 public abstract class Commons 
 {
+	public static final double epsilon = (double) 1.0/1000.0;
 	String PATH = "./resources/frwiki-debut.xml";//fichier source
 	String OUT_XML_FILE = "./resources/corpus.xml";//fichier destination
 	String CATEGORY = "sport";//category pour le filtrer
@@ -39,6 +43,28 @@ public abstract class Commons
 	{
 		writer.println(toSave);
 		writer.flush();
+
+	}
+	
+	protected void writeStartElement(XMLStreamWriter out, String toSave)
+	{
+		try {
+			out.writeCharacters("\n");
+			out.writeStartElement(toSave);
+			out.flush();
+		} catch (XMLStreamException e) {
+			e.printStackTrace();
+		}
+
+	}
+	protected void writeEndElement(XMLStreamWriter out)
+	{
+		try {
+			out.writeEndElement();
+			out.flush();
+		} catch (XMLStreamException e) {
+			e.printStackTrace();
+		}
 
 	}
 	

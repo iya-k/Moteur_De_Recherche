@@ -2,129 +2,153 @@ package tp1;
 
 
 import java.io.*;
-import java.text.Normalizer;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Pattern;
 
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
 
 public class Corpus extends ProcessXML
 {
 	PrintWriter writer;
-	private List<Element> pages;
-	String category;
-	Element racine;
-	static final int SIZE = 200000; 
-	String filter = "sport";
-	String delim = "-----------------------------------------------------------------";
+    private XMLStreamWriter out;
+    String outFile;
+    int taille = 0;
+    String category;
 	
 	public Corpus(String pathname, String fileOut)
 	{
 		super(pathname, fileOut);
-		
-		pages = new ArrayList<>();
-		racine = super.loadDocument();
-		category = filter;
+		outFile = fileOut;
+		writer = super.createFile("./resources/sortie.txt");
 
 		System.out.println("Corpus");
 	}
 
-	public void traitement()
+	public int traitement(String filter)
 	{
-
 		System.out.println("traitement");
-		writer = super.createFile("./resources/sortie.txt");
-		//on recupère toutes les pages
-		NodeList listPages = racine.getElementsByTagName("page");//getNodeName()) = page
-		//SIZE = listPages.getLength();
-
-		//for(int iPage = 0; iPage < SIZE; iPage++)
-		int iPage = 0;
-		int cpt = 0;
-		//System.out.println(iPage);
-		while(cpt < SIZE && iPage < listPages.getLength())
-		{
-			//System.out.println(iPage);
-			if(listPages.item(iPage) instanceof Element)
-			{
-				NodeList contenuPage = listPages.item(iPage).getChildNodes();
-				
-				for(int iRevision = 0; iRevision < contenuPage.getLength(); iRevision++)
-				{
-					if((contenuPage.item(iRevision) instanceof Element) && contenuPage.item(iRevision).getNodeName().equals("revision"))
-					{
-						NodeList contenuRevision = contenuPage.item(iRevision).getChildNodes();
-						for(int iText = 0; iText < contenuRevision.getLength(); iText++)
-						{
-							Node text = contenuRevision.item(iText); 
-							if((text instanceof Element) && 
-									text.getNodeName().equals("text") && (text.getTextContent().contains(category))) 
-							{	
-								pages.add((Element) listPages.item(iPage));
-
-								super.stringToWrite(writer, listPages.item(iPage).getFirstChild().getNextSibling().getTextContent());
-								//super.stringToWrite(writer, text.getTextContent());
-								//enregistreTxt(writer, delim);
-								
-								cpt++;
-
-							}//fin if text
-						}//for contenuRevision
-					}//fin if
-				}//for contenuPage
-
-			}//fin if listPages.item(i)
-			iPage++;
-
-		}//for listPages 
 		
-		super.writeXML(pages);
-		writer.close();
+	        File file = new File(outFile);
+	        this.category = filter;
+	        try {
+	            OutputStream outputStream = new FileOutputStream(file);
+	            out = XMLOutputFactory.newInstance().createXMLStreamWriter(
+	                    new OutputStreamWriter(outputStream, "utf-8"));
+	            out.writeStartDocument();
+	            out.writeStartElement("pages");
+	            super.loadDocument(filter);
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	        }
+		
+		return taille;
 		
 	}//traitement
 	/*
-	protected PrintWriter creerFichier(String path)
-	{
-		PrintWriter wr = null;
-		try {
-			wr = new PrintWriter(path);
-		} catch (FileNotFoundException e) {
+	@Override
+    public void writeTitle(String title) {
+        try {
+            taille++;
+            out.writeStartElement("page");
+            out.writeStartElement("title");
+            out.writeCharacters(title);
+            out.writeEndElement();
+            writer.write(title);
+        } catch (XMLStreamException e) {
+            e.printStackTrace();
+        }
+    }
 
-			e.printStackTrace();
-		}
-		return  wr;
-	}
-	
-	protected void enregistreTxt(PrintWriter writer, String toSave)
-	{
-		writer.println(toSave);
-		writer.flush();
+    //TODO filtrer avec les words_filter
+    @Override
+    public void writeId(String id) {
+        try{
+            out.writeStartElement("id");
+            out.writeCharacters(id);
+            out.writeEndElement();
+        }catch (XMLStreamException e) {
+            e.printStackTrace();
+        }
 
-	}*/
-	
+    }
+    */
+    @Override
+    public int writeText(String title, String id, String text) 
+    {
+        try{
+        	super.writeStartElement(out, "page");
+            //out.writeStartElement("page");
+        	super.writeStartElement(out,"title");
+            out.writeCharacters(title);
+            out.writeEndElement();
+            super.stringToWrite(writer,title);
+            
+            super.writeStartElement(out,"id");
+            out.writeCharacters(id);
+            out.writeEndElement();
+            
+            super.writeStartElement(out,"text");
+            out.writeCharacters(text);
+            super.writeEndElement(out);
+            super.writeEndElement(out);
+            
+            taille++;
+        }catch (XMLStreamException e) {
+            e.printStackTrace();
+        }
+        return taille;
+    }
+
+    @Override
+    public void endWritting() 
+    {
+        try{
+        	super.writeEndElement(out);
+            out.writeEndDocument();
+            out.close();
+            writer.close();
+        }catch (XMLStreamException e){
+            e.printStackTrace();
+        }
+    }
+
 	public static void main(String[] args) 
 	{
 		String path = "./resources/frwiki-debut.xml";//fichier source
 		String outFile = "./resources/corpus.xml";//fichier destination
 		String category = "sport";
-
-		System.out.println("main");
 		long tempsDebut = System.nanoTime(); 
 		
-		new Corpus(path, outFile).traitement();//nettoyage et selection
+		System.out.println(new Corpus(path, outFile).traitement(category));//nettoyage et selection
 
 		long tempsFin = System.nanoTime(); 
 		double seconds = (tempsFin - tempsDebut) / 1e9; 
-		System.out.println("Opération effectuée en: "+ seconds + " secondes.");
+		System.out.println("Fini en: "+ seconds + " secondes.");
 		
 		//Dictionnary dico = new Dictionnary();
 		//dico.generateDictionnary("./resources/sortie.txt");
-		System.out.println("Mémoire allouée : " + (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory()) + " octets");
+		System.out.println("RAM : " + (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory()) + " octets");
 
 	}
+	
+	/*
+	 * java Corpus 
+fichier creer ./sortie.txt
+Corpus
+traitement
+Chargement...
+javax.xml.stream.XMLStreamException: ParseError at [row,col]:[120269336,401]
+Message: JAXP00010004: The accumulated size of entities is "50,000,001" that exceeded the "50,000,000" limit set by "FEATURE_SECURE_PROCESSING".
+	at java.xml/com.sun.org.apache.xerces.internal.impl.XMLStreamReaderImpl.next(XMLStreamReaderImpl.java:652)
+	at java.xml/com.sun.xml.internal.stream.XMLEventReaderImpl.nextEvent(XMLEventReaderImpl.java:83)
+	at ProcessXML.loadDocument(ProcessXML.java:61)
+	at Corpus.traitement(Corpus.java:38)
+	at Corpus.main(Corpus.java:95)
+Fin du chargement
+177262
+Fini en: 102.985632307 secondes.
+RAM : 93762896 octets
+	 * */
 	
 	
 }
