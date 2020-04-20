@@ -90,6 +90,8 @@ public class Corpus extends ProcessXML
             super.writeStartElement(out,"text");
             out.writeCharacters(text);
             super.writeEndElement(out);
+            super.stringToWrite(writer,text);
+            
             super.writeEndElement(out);
             
             taille++;
@@ -116,7 +118,7 @@ public class Corpus extends ProcessXML
 	{
 		String path = "./resources/frwiki-debut.xml";//fichier source
 		String outFile = "./resources/corpus.xml";//fichier destination
-		String category = "sport";
+		String category = " sport";
 		long tempsDebut = System.nanoTime(); 
 		
 		System.out.println(new Corpus(path, outFile).traitement(category));//nettoyage et selection
