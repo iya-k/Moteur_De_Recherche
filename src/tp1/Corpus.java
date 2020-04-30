@@ -1,156 +1,208 @@
 package tp1;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 
-import java.io.*;
-
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
+import javax.xml.stream.events.Characters;
+import javax.xml.stream.events.StartElement;
+import javax.xml.stream.events.XMLEvent;
 
-public class Corpus extends ProcessXML
+import utils.Commons;
+
+
+public class Corpus extends Commons
 {
-	PrintWriter writer;
-    private XMLStreamWriter out;
-    String outFile;
-    int taille = 0;
-    String category;
-	
-	public Corpus(String pathname, String fileOut)
-	{
-		super(pathname, fileOut);
-		outFile = fileOut;
-		writer = super.createFile("./resources/sortie.txt");
+	static final int MAX_SIZE = 100;//200000; 
+	private String pathname;
+	private int nbre_pages;
+	private XMLStreamWriter out;
+	private String outFile;
+	final String PAGES = "pages";
+	final String RACINE = "mediawiki";
+	final String PAGE = "page";
+	final String TITLE = "title";
+	final String ID = "id";
+	final String TEXT = "text";
 
-		System.out.println("Corpus");
+	public Corpus(String path, String fileOut)
+	{
+		pathname = path;
+		outFile = fileOut;
+	}
+	
+	public int traitement()
+	{
+		nbre_pages = 0;
+		File file = new File(outFile);
+		try {
+			OutputStream outputStream = new FileOutputStream(file);
+			out = XMLOutputFactory.newInstance().createXMLStreamWriter(
+					new OutputStreamWriter(outputStream, "utf-8"));
+			out.writeStartDocument();
+			super.writeStartElement(out, RACINE);
+			super.writeStartElement(out, PAGES);
+			loadDocument();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return nbre_pages;
+
+	}//traitement
+
+	public void loadDocument()
+	{
+		
+		System.out.println("Chargement...");
+		File filein = new File(pathname);
+		XMLInputFactory factory = XMLInputFactory.newInstance();
+		factory.setProperty("javax.xml.stream.isCoalescing", true);
+		try {
+			XMLEventReader xmlEventReader = factory.createXMLEventReader(new FileReader(filein));
+			String titre = "";
+			String id = "";
+			boolean ok = false;
+			boolean maxAtteind = false;
+			while (xmlEventReader.hasNext()) {
+				
+				if(maxAtteind)
+				{
+					break;
+				}
+				XMLEvent xmlEvent = xmlEventReader.nextEvent();
+
+				if(xmlEvent.isStartElement())
+				{
+					StartElement startElement = xmlEvent.asStartElement();
+					switch (startElement.getName().getLocalPart()) {
+					case TITLE:
+
+	                    //System.out.println(page_vu+" nbr de conforme: "+nbre_pages);
+						xmlEvent = xmlEventReader.nextEvent();
+						if(xmlEvent instanceof Characters){
+							titre = xmlEvent.asCharacters().getData();
+							//System.out.println("titre: "+titre);
+						}
+						break;
+					case ID :
+
+						xmlEvent = xmlEventReader.nextEvent();
+						if (ok)
+						{
+							break;
+						}
+						if(xmlEvent instanceof Characters) {
+							id = xmlEvent.asCharacters().getData();
+							ok = true;
+							//System.out.println("--------id: "+id);
+						}
+						break;
+					case TEXT:
+						xmlEvent = xmlEventReader.nextEvent();
+						if(titre.equals(""))
+						{
+							break;
+						}
+						if(xmlEvent instanceof Characters) 
+						{
+							for(String cat: CATEGORY)
+							{
+								//System.out.println(cat);
+								String text = xmlEvent.asCharacters().getData();
+								if(text.contains(cat))
+								{
+									titre = stripAccents(titre);
+									text = xmlEvent.asCharacters().getData();
+									//System.out.println("titre: "+titre+", id: "+id+" finnnnnnnnnnnnnnnnnn \n\n");
+                                    if ( writeText(titre, id, text) >= MAX_SIZE)
+									{
+                                    	maxAtteind = true;
+                                    	System.out.println(maxAtteind);
+										break;
+									}
+									titre = "";
+									id = "";
+									//System.out.println(p.toString());
+								}
+								ok = false;
+							} //for words_filter
+						}//if xmlEvent
+						break;
+					default:
+
+						break;
+					}
+				}
+				else if(xmlEvent.isEndDocument()){
+					endWritting();
+				}
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		System.out.println("Fin du chargement");
 	}
 
-	public int traitement(String filter)
+	public int writeText(String title, String id, String text) 
 	{
-		System.out.println("traitement");
-		
-	        File file = new File(outFile);
-	        this.category = filter;
-	        try {
-	            OutputStream outputStream = new FileOutputStream(file);
-	            out = XMLOutputFactory.newInstance().createXMLStreamWriter(
-	                    new OutputStreamWriter(outputStream, "utf-8"));
-	            out.writeStartDocument();
-	            out.writeStartElement("pages");
-	            super.loadDocument(filter);
-	        } catch (Exception e) {
-	            e.printStackTrace();
-	        }
-		
-		return taille;
-		
-	}//traitement
-	/*
-	@Override
-    public void writeTitle(String title) {
-        try {
-            taille++;
-            out.writeStartElement("page");
-            out.writeStartElement("title");
-            out.writeCharacters(title);
-            out.writeEndElement();
-            writer.write(title);
-        } catch (XMLStreamException e) {
-            e.printStackTrace();
-        }
-    }
+		try{
+			writeStartElement(out, PAGE);
+			writeStartElement(out, TITLE);
+			out.writeCharacters(title);
+			out.writeEndElement();
 
-    //TODO filtrer avec les words_filter
-    @Override
-    public void writeId(String id) {
-        try{
-            out.writeStartElement("id");
-            out.writeCharacters(id);
-            out.writeEndElement();
-        }catch (XMLStreamException e) {
-            e.printStackTrace();
-        }
+			writeStartElement(out, ID);
+			out.writeCharacters(id);
+			out.writeEndElement();
 
-    }
-    */
-    @Override
-    public int writeText(String title, String id, String text) 
-    {
-        try{
-        	super.writeStartElement(out, "page");
-            //out.writeStartElement("page");
-        	super.writeStartElement(out,"title");
-            out.writeCharacters(title);
-            out.writeEndElement();
-            super.stringToWrite(writer,title);
-            
-            super.writeStartElement(out,"id");
-            out.writeCharacters(id);
-            out.writeEndElement();
-            
-            super.writeStartElement(out,"text");
-            out.writeCharacters(text);
-            super.writeEndElement(out);
-            super.stringToWrite(writer,text);
-            
-            super.writeEndElement(out);
-            
-            taille++;
-        }catch (XMLStreamException e) {
-            e.printStackTrace();
-        }
-        return taille;
-    }
+			writeStartElement(out, TEXT);
+			out.writeCharacters(text);
+			writeEndElement(out);
+			//super.stringToWrite(writer,text);
 
-    @Override
-    public void endWritting() 
-    {
-        try{
-        	super.writeEndElement(out);
-            out.writeEndDocument();
-            out.close();
-            writer.close();
-        }catch (XMLStreamException e){
-            e.printStackTrace();
-        }
-    }
+			writeEndElement(out);
+
+		}catch (XMLStreamException e) {
+			e.printStackTrace();
+		}
+		
+		return nbre_pages++;
+	}
+
+	public void endWritting() 
+	{
+		try{
+			writeEndElement(out);
+			writeEndElement(out);
+			out.writeEndDocument();
+			out.close();
+			//writer.close();
+		}catch (XMLStreamException e){
+			e.printStackTrace();
+		}
+	}
 
 	public static void main(String[] args) 
 	{
-		String path = "./resources/frwiki-debut.xml";//fichier source
-		String outFile = "./resources/corpus.xml";//fichier destination
-		String category = " sport";
 		long tempsDebut = System.nanoTime(); 
-		
-		System.out.println(new Corpus(path, outFile).traitement(category));//nettoyage et selection
+
+		System.out.println(new Corpus(PATH, OUT_XML_FILE).traitement());//nettoyage et selection
 
 		long tempsFin = System.nanoTime(); 
 		double seconds = (tempsFin - tempsDebut) / 1e9; 
 		System.out.println("Fini en: "+ seconds + " secondes.");
-		
-		//Dictionnary dico = new Dictionnary();
-		//dico.generateDictionnary("./resources/sortie.txt");
+
 		System.out.println("RAM : " + (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory()) + " octets");
 
 	}
-	
-	/*
-	 * java Corpus 
-fichier creer ./sortie.txt
-Corpus
-traitement
-Chargement...
-javax.xml.stream.XMLStreamException: ParseError at [row,col]:[120269336,401]
-Message: JAXP00010004: The accumulated size of entities is "50,000,001" that exceeded the "50,000,000" limit set by "FEATURE_SECURE_PROCESSING".
-	at java.xml/com.sun.org.apache.xerces.internal.impl.XMLStreamReaderImpl.next(XMLStreamReaderImpl.java:652)
-	at java.xml/com.sun.xml.internal.stream.XMLEventReaderImpl.nextEvent(XMLEventReaderImpl.java:83)
-	at ProcessXML.loadDocument(ProcessXML.java:61)
-	at Corpus.traitement(Corpus.java:38)
-	at Corpus.main(Corpus.java:95)
-Fin du chargement
-177262
-Fini en: 102.985632307 secondes.
-RAM : 93762896 octets
-	 * */
-	
-	
 }
