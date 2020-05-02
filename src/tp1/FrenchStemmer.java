@@ -1,4 +1,4 @@
-package tp2;
+package tp1;
 
 public interface FrenchStemmer 
 {
