@@ -85,6 +85,15 @@ public class Page
 	{
 		return title;
 	}
+	
+	/**
+	 * @return the title
+	 */
+	public int getIDByTitle(String title) 
+	{
+		return id;
+	}
+	
 	public String listMots() 
 	{
 		String toReturn = "";
@@ -99,7 +108,7 @@ public class Page
 	public String toString() 
 	{
 		return "Page: "+id+" - "+title+"\n"
-				+ "l'ensemble des mots:\n" + listMots();
+				+ "l'ensemble des liens:\n" + links;
 	}
 	
 	/*
