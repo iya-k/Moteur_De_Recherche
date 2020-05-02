@@ -1,10 +1,12 @@
 package tp1;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
@@ -15,12 +17,12 @@ import javax.xml.stream.events.Characters;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 
-import utils.Commons;
-
-
-public class Corpus extends Commons
+public class Corpus
 {
 	static final int MAX_SIZE = 100;//200000; 
+	public static final String[] CATEGORY =  {" sport", " tenis", " judo", " football"};//category pour le filtrer
+	public static final String PATH = "./resources/frwiki-debut.xml";//fichier source
+	public static final String CORPUS_XML_FILE = "./resources/corpus.xml";//fichier destination
 	private String pathname;
 	private int nbre_pages;
 	private XMLStreamWriter out;
@@ -31,11 +33,13 @@ public class Corpus extends Commons
 	final String TITLE = "title";
 	final String ID = "id";
 	final String TEXT = "text";
+	PrintWriter writer;
 
 	public Corpus(String path, String fileOut)
 	{
 		pathname = path;
 		outFile = fileOut;
+		writer = createFile("./resources/sortie.txt");
 	}
 	
 	public int traitement()
@@ -47,8 +51,8 @@ public class Corpus extends Commons
 			out = XMLOutputFactory.newInstance().createXMLStreamWriter(
 					new OutputStreamWriter(outputStream, "utf-8"));
 			out.writeStartDocument();
-			super.writeStartElement(out, RACINE);
-			super.writeStartElement(out, PAGES);
+			writeStartElement(out, RACINE);
+			writeStartElement(out, PAGES);
 			loadDocument();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -119,7 +123,6 @@ public class Corpus extends Commons
 								String text = xmlEvent.asCharacters().getData();
 								if(text.contains(cat))
 								{
-									titre = stripAccents(titre);
 									text = xmlEvent.asCharacters().getData();
 									//System.out.println("titre: "+titre+", id: "+id+" finnnnnnnnnnnnnnnnnn \n\n");
                                     if ( writeText(titre, id, text) >= MAX_SIZE)
@@ -161,6 +164,9 @@ public class Corpus extends Commons
 			out.writeCharacters(title);
 			out.writeEndElement();
 
+			writer.println(title);
+			writer.flush();
+			
 			writeStartElement(out, ID);
 			out.writeCharacters(id);
 			out.writeEndElement();
@@ -168,7 +174,8 @@ public class Corpus extends Commons
 			writeStartElement(out, TEXT);
 			out.writeCharacters(text);
 			writeEndElement(out);
-			//super.stringToWrite(writer,text);
+			writer.println(text);
+			writer.flush();
 
 			writeEndElement(out);
 
@@ -191,12 +198,47 @@ public class Corpus extends Commons
 			e.printStackTrace();
 		}
 	}
+	protected void writeStartElement(XMLStreamWriter out, String toSave)
+	{
+		try {
+			out.writeCharacters("\n");
+			out.writeStartElement(toSave);
+			out.flush();
+		} catch (XMLStreamException e) {
+			e.printStackTrace();
+		}
 
+	}
+	protected void writeEndElement(XMLStreamWriter out)
+	{
+		try {
+			out.writeCharacters("\n");
+			out.writeEndElement();
+			out.flush();
+		} catch (XMLStreamException e) {
+			e.printStackTrace();
+		}
+	}
+
+	//creation d'un fichier
+			protected PrintWriter createFile(String path)
+			{
+				PrintWriter wr = null;
+				try {
+					wr = new PrintWriter(path);
+				} catch (FileNotFoundException e) {
+
+					e.printStackTrace();
+				}
+				System.out.println("fichier creer "+path);
+				return  wr;
+			}
+	
 	public static void main(String[] args) 
 	{
 		long tempsDebut = System.nanoTime(); 
 
-		System.out.println(new Corpus(PATH, OUT_XML_FILE).traitement());//nettoyage et selection
+		System.out.println(new Corpus(PATH, CORPUS_XML_FILE).traitement());//nettoyage et selection
 
 		long tempsFin = System.nanoTime(); 
 		double seconds = (tempsFin - tempsDebut) / 1e9; 
