@@ -2,8 +2,6 @@ package tp1;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -15,13 +13,7 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
-import org.jsoup.Connection;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
-import tp2.FrenchStemmerImp;
 import utils.Utils_Files;
 
 public class Dictionary extends Utils_Files
@@ -36,16 +28,11 @@ public class Dictionary extends Utils_Files
 	}
 
 
-
 	/**
 	 * @return the dico
 	 */
-	protected ArrayList<String> getDico()
-	{
-		return sort();//trier le dictionnaire
-	}
 
-	public void generateDictionnary()
+	public List<String> getDico()
 	{
 		BufferedReader buffer = readFile("sortie");
 
@@ -71,7 +58,8 @@ public class Dictionary extends Utils_Files
 			e.printStackTrace();
 		}
 		createDico();
-
+		
+		return sort();//trier le dictionnaire
 	}
 
 	private void generateHashMap(String chaine)
@@ -155,7 +143,6 @@ public class Dictionary extends Utils_Files
 			{
 				sortedDico.add(s);
 			}
-
 		}
 		Collections.sort(sortedDico);
 
@@ -186,6 +173,6 @@ public class Dictionary extends Utils_Files
 
 	public static void main(String[] args) 
 	{
-		new Dictionary().generateDictionnary();
+		new Dictionary().getDico();
 	}
 }

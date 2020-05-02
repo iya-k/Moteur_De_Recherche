@@ -1,10 +1,9 @@
-package tp2;
+package tp1;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.List;
 
-import tp1.Word;
 import utils.Utils;
 
 public class FrenchStemmerImp implements FrenchStemmer 

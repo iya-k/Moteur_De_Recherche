@@ -1,32 +1,18 @@
 package utils;
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamWriter;
-
-import tp1.Matrice;
+import tp1.CLI;
 import tp1.Page;
-import tp1.Word;
 
 
 /*
@@ -51,6 +37,7 @@ public abstract class Commons extends Utils_Files
 	public static final double EPSILON = (double) 1.0/1000.0;
 	public static final float ZAP_D = (float) 0.15;
 	public static final int TAILLE_DICO = 20000;
+	public static final int SEUIL_MOT = 20;
 	public static final String PATH = "./resources/frwiki-debut.xml";//fichier source
 	public static final String CORPUS_XML_FILE = "./resources/corpus.xml";//fichier destination
 	//public static final String PATH_2 = "/Users/mmekaba/home/University/M2/Semestre_2/MAAIN/TP/Corpus/corpus.xml";
@@ -59,11 +46,7 @@ public abstract class Commons extends Utils_Files
 	//public static final String OUT_TXT_FILE ="./resources/sortie.txt";
 
 	private ArrayList<String> links;
-	protected ArrayList<Page> visited_pages;
-	//private Page aPage;
-	//private Word aWord;
-	private ArrayList<Word> listWords = new ArrayList<Word>();
-	private PrintWriter writerDico;
+	protected static ArrayList<Page> visited_pages = new ArrayList<Page>();
 	//protected static HashMap<HashMap<Integer, Integer>, Integer> mots_pages;
 	protected static HashMap<Integer, HashMap<Integer, Integer>> mots_pages;
 	protected static HashMap<Integer, ArrayList<String>> liensExternes;
@@ -80,21 +63,6 @@ public abstract class Commons extends Utils_Files
 	protected void setLinks(ArrayList<String> links) {
 		this.links = links;
 	}
-
-	/**
-	 * @return the listWords
-	 */
-	protected ArrayList<Word> getlistWords() {
-		return listWords;
-	}
-
-	/**
-	 * @param listWords the listWords to set
-	 */
-	protected void setlistWords(ArrayList<Word> listWords) {
-		this.listWords = listWords;
-	}
-
 	void addVisited(Page page)
 	{
 		visited_pages.add(page);
@@ -111,13 +79,12 @@ public abstract class Commons extends Utils_Files
 		words = Arrays.asList(text.replaceAll("[^a-zA-Z]", " ")
 				.split(" "))
 				.stream().toArray(String[]::new);
-		words = withOutStopWords(words).toArray(String[]::new);
 		//System.out.println(page.getTitle()+"\n\n ensemble de mots------"+text );
 		
 		for(String mot: words)
 		{
-			int nbOccur = getWordOccurence(page, mot, 1);
-			//page.setOccur_Mots(page.getOccur_Mots());
+			getWordOccurence(page, mot, 1);
+			//int nbOccur = getWordOccurence(page, mot, 1);
 
 			//System.out.println("\n\n ------"+mot);
 //			Word w = existWord(mot);
@@ -145,6 +112,7 @@ public abstract class Commons extends Utils_Files
 		return page;
 	}
 	
+	//ne sert à rien, doit être supprimé
 	protected List<String> withOutStopWords(String[] words)
 	{
 		List<String> newText = new ArrayList<>();
@@ -154,7 +122,7 @@ public abstract class Commons extends Utils_Files
 			//if(!stopWords().contains(words[i]))
 			//{
 				newText.add(words[i]);
-				System.out.println(words[i]);
+				//System.out.println(words[i]);
 			//}
 		}
 
@@ -189,27 +157,17 @@ public abstract class Commons extends Utils_Files
 		return p.getOccur_Mots().get(chaine);
 	}
 	//test si le mot existe déjà dans la liste
-	protected Word existWord(String word)
-	{
-		for(Word w: listWords)
-		{
-			if(w.getWord().equals(word))
-			{
-				return w;
-			}
-		}
-		return null;
-	}
-	public int wordOccurInPage(String word, Page p) 
-	{
-		int toReturn = 0;
-		
-		if(p.getOccur_Mots().containsKey(word))
-		{
-			toReturn = p.getOccur_Mots().get(word);
-		}
-		return toReturn;
-	}
+//	protected Word existWord(String word)
+//	{
+//		for(Word w: listWords)
+//		{
+//			if(w.getWord().equals(word))
+//			{
+//				return w;
+//			}
+//		}
+//		return null;
+//	}
 	
 	public boolean isWordInPage(String word, Page p) 
 	{
@@ -250,7 +208,7 @@ public abstract class Commons extends Utils_Files
 	 return size;
  }
 
- public static void push_matrice(Matrice m, int origin_node, LinkedList<Integer> values) 
+ public static void push_matrice(CLI cli, int origin_node, LinkedList<Integer> values) 
  {
 	 int size = values.size();
 	 if (size == 0) {
@@ -258,12 +216,12 @@ public abstract class Commons extends Utils_Files
 	 }
 	 float value = 1 / (float) size;
 	 for (int i = 0; i < size; i++) {
-		 m.edit_value(origin_node, values.get(i), value);
+		 cli.edit_value(origin_node, values.get(i), value);
 	 }
  }
 
- public static Matrice getMatriceFromFile(String filename) throws IOException {
-	 Matrice m = new Matrice(matrice_size(filename) + 1);
+ public static CLI getMatriceFromFile(String filename) throws IOException {
+	 CLI cli = new CLI(matrice_size(filename) + 1);
 	 try {
 		 BufferedReader br = new BufferedReader(new FileReader(filename));
 		 String line;
@@ -279,31 +237,29 @@ public abstract class Commons extends Utils_Files
 			 if (pos == x) {
 				 values.add(y);
 			 } else {
-				 push_matrice(m, pos, values);
+				 push_matrice(cli, pos, values);
 				 values = new LinkedList<Integer>();
 				 values.add(y);
 				 pos = x;
 			 }
 		 }
-		 push_matrice(m, pos, values);
+		 push_matrice(cli, pos, values);
 
 		 br.close();
 	 } catch (IOException e) {
 		 throw new IOException(e);
 	 }
-	 return m;
+	 return cli;
  }
 
- public static boolean test_file(String filename) {
-	 Matrice m;
+ public static boolean test_file(String filename) 
+ {
 	 try {
-		 m = getMatriceFromFile(filename);
+		 getMatriceFromFile(filename);
 	 } catch (IOException e) {
 		 System.out.println("'" + filename + "' doesn't exist.");
 		 return false;
 	 }
-
-	 
 	 return true;
  }
 
