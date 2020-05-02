@@ -32,6 +32,7 @@ public abstract class Utils_Files
 	//public static final String PATH_2 = "/Users/mmekaba/home/University/M2/Semestre_2/MAAIN/TP/Corpus/corpus.xml";
 	public static final String DICO_FILE = "dico";//dictionnaire
 	public static final String STOP_WORDS = "stopWords";//Stopwords
+	public static final String MOTS_PAGES = "mots_pages";//Mots_Pages
 	public static final String EMPTY_WORDS = "mots_vides";//mots vides 
 	public static final String RESOURCES_DIR = "./resources/";//resources 
 	//public static final String OUT_TXT_FILE ="sortie.txt";
@@ -119,7 +120,14 @@ public abstract class Utils_Files
 			Writer writer = new BufferedWriter(new OutputStreamWriter(
 		              new FileOutputStream(file), "utf-8"));
 			for(Object str : map.keySet()){
-				writer.write((String)str + " : "+ map.get(str).toString()+"\n" );
+				if(str instanceof String)
+				{
+					writer.write((String)str + " : "+ map.get(str).toString()+"\n" );
+				}
+				else if(str instanceof Integer)
+				{
+					writer.write((Integer)str + " : "+ map.get(str).toString()+"\n" );
+				}
 				writer.flush();
 			}
 			writer.close();
