@@ -76,23 +76,6 @@ public class Vecteur
 		return new Vecteur(res);
 
 	}
-	//[ 4.0, 41.0, 45.0, 57.0]
-	/*
-	public Vecteur vector_transpose(Vecteur vector, Matrice m) 
-	{
-		float[] res = new float[vector.tab.length];
-		for (int i = 0, k = 1, indice = 0; k <  m.getmL().size(); i++, k++) 
-        {
-            for (float j = m.getmL().get(i); j < m.getmL().get(k); j++, indice++) 
-            {
-            	res[m.getmI().get(indice)] += m.getmC().get((int) j) * vector.tab[i]; // On effectue les calculs non plus sur les colonnes de la matrice mais sur ses lignes
-            	
-            }
-        }
-
-		return new Vecteur(res);
-	}
-	*/
 	//matrice transposée [ 4.0, 41.0, 45.0, 57.0]
 	public Vecteur vector_transpose(Vecteur vector, Matrice m) 
 	{
@@ -119,102 +102,6 @@ public class Vecteur
         return new Vecteur(result);
     }
 	
-	
-	/*
-    Fonctions de création d'une matrice à partir d'un fichier
-  */
-
- public int matrice_size(String matrice_file) {
-	 int size = -1;
-	 try {
-		 BufferedReader br = new BufferedReader(new FileReader(matrice_file));
-		 String line;
-		 while ((line = br.readLine()) != null) {
-			 String[] split = line.split(" ");
-			 Integer x = Integer.parseInt(split[0]);
-			 Integer y = Integer.parseInt(split[1]);
-			 if (x > size) {
-				 size = x;
-			 }
-			 if (y > size) {
-				 size = y;
-			 }
-		 }
-
-		 br.close();
-	 } catch (IOException e) {
-		 System.out.println("'" + matrice_file + "' doesn't exist!");
-	 }
-
-	 return size;
- }
-
- public void push_matrice(Matrice m, int origin_node, LinkedList<Integer> values) 
- {
-	 int size = values.size();
-	 if (size == 0) {
-		 return;
-	 }
-	 float value = 1 / (float) size;
-	 for (int i = 0; i < size; i++) {
-		 m.edit_value(origin_node, values.get(i), value);
-	 }
- }
-
- public Matrice getMatriceFromFile(String filename) throws IOException {
-	 Matrice m = new Matrice(this.matrice_size(filename) + 1);
-	 try {
-		 BufferedReader br = new BufferedReader(new FileReader(filename));
-		 String line;
-		 int pos = -1;
-		 LinkedList<Integer> values = new LinkedList<Integer>();
-		 while ((line = br.readLine()) != null) 
-		 {
-			 if (line.charAt(0) == '#')
-					continue;
-			 String[] split = line.split("[\\s\\t]");
-			 Integer x = Integer.parseInt(split[0]);
-			 Integer y = Integer.parseInt(split[1]);     
-			 if (pos == x) {
-				 values.add(y);
-			 } else {
-				 this.push_matrice(m, pos, values);
-				 values = new LinkedList<Integer>();
-				 values.add(y);
-				 pos = x;
-			 }
-		 }
-		 this.push_matrice(m, pos, values);
-
-		 br.close();
-	 } catch (IOException e) {
-		 throw new IOException(e);
-	 }
-	 return m;
- }
-
- public boolean test_file(String filename) {
-	 Matrice m;
-	 try {
-		 m = this.getMatriceFromFile(filename);
-	 } catch (IOException e) {
-		 System.out.println("'" + filename + "' doesn't exist.");
-		 return false;
-	 }
-
-	 float[][] mat = m.getMatrice();
-	 float[][] mat2 = {{0, 3, 5, 8}, {1, 0, 2, 0}, {0, 0, 0, 0}, {0, 3, 0, 0}};
-
-	 for (int i = 0; i < mat.length; i++) {
-		 for (int j = 0; j < mat[i].length; j++) {
-			 if (mat2[i][j] != ((int) (10 * mat[i][j]))) {
-				 System.out.println("M[" + i + "][" + j + "] = " + mat[i][j] + ", should be : " + mat2[i][j] / 10);
-				 return false;
-			 }
-		 }
-	 }
-	 return true;
- }
 
 	
 	
