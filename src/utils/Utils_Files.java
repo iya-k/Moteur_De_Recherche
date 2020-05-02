@@ -13,9 +13,6 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -23,7 +20,6 @@ import java.util.Scanner;
 import org.apache.commons.lang3.StringUtils;
 
 import tp1.Page;
-import tp1.Word;
 
 public abstract class Utils_Files 
 {
@@ -40,16 +36,10 @@ public abstract class Utils_Files
 	public static final String RESOURCES_DIR = "./resources/";//resources 
 	//public static final String OUT_TXT_FILE ="sortie.txt";
 
-	private ArrayList<String> dico;
-	private ArrayList<String> links;
 	protected ArrayList<Page> visited_pages;
-	//private Page aPage;
-	//private Word aWord;
-	private ArrayList<Word> listWords = new ArrayList<Word>();
 	private  BufferedReader buffer_reader ;
 	private InputStream isR ;
 	private InputStreamReader isrR;
-	private PrintWriter writerDico;
 	
 	
 
@@ -100,7 +90,7 @@ public abstract class Utils_Files
 			return words;
 		}
 		
-		public List<String> getDataFromFile(String filename)
+		public static List<String> getDataFromFile(String filename)
 		{
 			System.out.println("\n getDataFromFile "+filename);
 			List<String> buf = new ArrayList<String>();	
@@ -166,11 +156,13 @@ public abstract class Utils_Files
 
 		}
 		
-		public String getTxtFilename(String path) 
+		public static String getTxtFilename(String path) 
 		{
 			System.out.println("("+RESOURCES_DIR+path+TXT+")");
 			return RESOURCES_DIR+path+TXT ;
-		}//supprimer les accents
+		}
+		
+		//supprimer les accents
 		protected static String stripAccents(String s) {
 
 			if(s.toLowerCase().contains("é"))

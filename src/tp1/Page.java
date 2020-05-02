@@ -94,6 +94,15 @@ public class Page
 		return id;
 	}
 	
+	public int wordOccurence(String word) 
+	{
+		if(occur_mots.containsKey(word))
+		{
+			return occur_mots.get(word);
+		}
+		return 0;
+	}
+	
 	public String listMots() 
 	{
 		String toReturn = "";

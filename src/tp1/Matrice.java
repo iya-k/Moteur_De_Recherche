@@ -1,198 +1,82 @@
 package tp1;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.*;
-
 public class Matrice {
 
 	private int n;
-	HashMap<Integer, HashMap<Integer, Double>> mots_pages;
-	HashMap<String, Integer> numero_pages;
-	private LinkedList<Float> mC;
-	private LinkedList<Integer> mL;
-	private LinkedList<Integer> mI;
+	private float[][] mat;
 
-	public Matrice (Float[] c, Integer[] l, Integer[] i) 
+	public Matrice (float[][] m) 
 	{
-		mC = new LinkedList<Float>(Arrays.asList(c));
-		mL = new LinkedList<Integer>(Arrays.asList(l));
-		mI = new LinkedList<Integer>(Arrays.asList(i));
-		this.n = l.length - 1;
+		mat = m;
 	}
 
 	public  Matrice(int size)
 	{
 		n = size;
-		mC = new LinkedList<Float>();
-		mL = new LinkedList<Integer>();
-		mI = new LinkedList<Integer>();
-		for (int i = 0; i <= this.n; i++) {
-			this.mL.add(0);
+		mat = new float[n][n];
+
+		int i,j;
+		for(i=0;i<n;i++) 
+		{ 
+			for(j=0;j<n;j++) 
+			{
+				mat[i][j] = 0; 
+			}
 		}
 	}
 
-	/**
-	 * @return the n
-	 */
-	 public int getN() {
-		 return n;
-	 }
+	public float[][] getMatrice() 
+	{
+		return mat;
+	}
 
-	 /**
-	  * @return the mC
-	  */
-	 public LinkedList<Float> getmC() {
-		 return mC;
-	 }
+	@Override
+	public String toString() 
+	{
+		String matrice = "";
+		for(int i = 0; i < n; i++)
+		{
+			String s = "[";
+			for(int j = 0; j < n; j++)
+			{
+				s += mat[i][j]+",";
+			}
+			matrice += s+"]"+"\n";
+			s = "";
+			//System.out.println(matrice);
+		}
 
-	 /**
-	  * @param mC the mC to set
-	  */
-	 public void setmC(int n,float Mat[][]) 
-	 { 
-		 int i,j;
-		 for(i=0;i<n;i++) 
-		 { 
-			 for(j=0;j<n;j++) 
-			 {
-				 if(Mat[i][j]!=0) 
-				 {
-					 mC.add(Mat[i][j]); 
-				 }
-			 }
-		 }
-	 }
-
-	 /**
-	  * @return the mL
-	  */
-	 public LinkedList<Integer> getmL() {
-		 return mL;
-	 }
-	 /**
-	  * @return the mI
-	  */
-	 public LinkedList<Integer> getmI() {
-		 return mI;
-	 }
-
-	 /**
-	  * @param mI the mI to set
-	  */
-	 public void setmI(int n, float Mat[][]) 
+		return "Matrice:{\n" +
+		matrice +
+		'}';
+	}
+	public void edit_value(int line, int column, float value) 
 	 {
-		 for (int i = 0; i < n; i++) {
-			 for (int j = 0; j < n; j++) {
-				 if (Mat[i][j] != 0) {
-					 mI.add(j);
-				 }
-			 }
-		 }
-	 }
-
-	 /**
-	  * Incrémente les valeurs de mL d'index supérieurs ou égaux à index_from
-	  *
-	  * @param index_from
-	  */
-
-	 private void setmL(int index_from) 
-	 {
-		 ListIterator<Integer> it_L = mL.subList(index_from, mL.size()).listIterator();
-		 int current_value;
-		 while (it_L.hasNext()) {
-			 current_value = it_L.next();
-			 it_L.set(current_value + 1);
-		 }
-	 }
-	 /**
-	  * modifier une case de la matrice
-	  *
-	  * @param line
-	  * @param column
-	  * @param value
-	  */
-	 public void edit_value(int line, int column, float value) 
-	 {
-		 int line_start = mL.get(line), line_end = mL.get(line + 1), index = 0; //On récupère les positions de début et de fin d'une ligne à l'aide de L
-		 Iterator<Integer> it = mI.subList(line_start, mI.size()).iterator();
-		 boolean exist = false; //exist indique si la position de la case existe dans C
-
-		 if (line_end - line_start > 0) //Si la ligne a au moins une valeur non vide, on cherche la case à modifier
-		 { 
-			 int current;
-			 while (!exist && index < line_end - line_start) //tant que l'on a pas trouvé la case et que la ligne n'est pas entièrement parcourue
-			 { 
-				 current = it.next();
-
-				 if (current == column) 
-				 {
-					 this.mC.set(line_start + index, value); //Si l'on trouve la colone recherchée dans la section de I
-					 // correspondant à cette ligne, alors assigne value à la valeur correspondante dans C
-					 exist = true;
-
-				 } else if (current > column) //si on a atteint une colonne d'indice plus élevé sans la trouver, alors
-					 // on insère la valeur juste avant la case courrante
-				 {
-					 this.mC.add(line_start + index, value);
-					 this.mI.add(line_start + index, column);
-					 this.setmL(line + 1); ////on modifie L après l'insertion
-					 exist = true;
-				 }
-				 index++;
-			 }
-		 }
-		 if (!exist) //si la ligne est vide, on insère la valeur de la case.
+		 if(line < n && column < n)
 		 {
-			 this.mC.add(line_start + index, value);
-			 this.mI.add(line_start + index, column);
-			 this.setmL(line + 1); //on modifie L après l'insertion
+			 mat[line][column] = value;
 		 }
 	 }
-
-	 public float[][] getMatrice() {
-		 float[][] m = new float[n][n];
-
-		 for (int i = 0, k = 1; i < mI.size(); i++) {
-			 if (i >= mL.get(k)) {
-				 do {
-					 k++;
-				 } while (mL.get(k).equals(mL.get(k - 1)));
-			 }
-			 m[k - 1][mI.get(i)] = mC.get(i);
-		 }
-		 return m;
-	 }
-
-	 @Override
-	 public String toString() 
-	 {
-		 return "Matrice{" +
-				 "C=" + mC +
-				 ", L=" + mL +
-				 ", I=" + mI +
-				 ", n=" + n +
-				 '}';
-	 }
-	 
-	 public static void main(String[] args) 
-	 {
-		 Integer[] L = {0, 3, 5, 5, 6};
-		 Float[] C = {3f, 5f, 8f, 1f, 2f, 3f};
-		 Integer[] I = {1, 2, 3, 0, 2, 1};
-		 Matrice m = new Matrice(C, I, L);
-		 System.out.println("\nMatrice : " + m.toString());
-		 /*
-		        float[][] tab = m.getMatrice();
-		        for(int i = 0; i < tab.length; i++)
-		        {
-		        	for(int j = 0; j < tab.length; j++)
-			        {
-			        	System.out.println(" "+tab[i][j]);
-			        }
-		        }
-		  */
-	 }
+	public static void main(String[] args) 
+	{
+	     Matrice m1 = new Matrice(4); // version alternative d'instancier une matrice
+	        m1.edit_value(0, 0, 0);
+	        m1.edit_value(0, 1, 0);
+	        m1.edit_value(0, 2, 1);
+	        m1.edit_value(0, 3, 0);
+	        m1.edit_value(1, 0, 2);
+	        m1.edit_value(1, 1, 3);
+	        m1.edit_value(1, 2, 0);
+	        m1.edit_value(1, 3, 4);
+	        m1.edit_value(2, 0, 0);
+	        m1.edit_value(2, 1, 5);
+	        m1.edit_value(2, 2, 6);
+	        m1.edit_value(2, 3, 7);
+	        m1.edit_value(3, 0, 0);
+	        m1.edit_value(3, 1, 0);
+	        m1.edit_value(3, 2, 0);
+	        m1.edit_value(3, 3, 0);
+		System.out.println("\n " + m1.toString());
+		
+	}
 }

@@ -1,7 +1,6 @@
 package tp1;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 
 public class Word implements Comparable<Word>
 {
@@ -13,7 +12,7 @@ public class Word implements Comparable<Word>
     private String regionSecond = "";
     private String regionfirst = "";
     private String region = "";
-	
+	/*
 	public Word(Page p, String s, int nbOccur)
 	{
 		this.pages = new ArrayList<>();
@@ -32,7 +31,7 @@ public class Word implements Comparable<Word>
 		word = s;
 		
 	}	
-	
+	*/
 	public Word(String word) 
 	{
         assert word != null;
@@ -63,18 +62,6 @@ public class Word implements Comparable<Word>
 	 */
 	public void setNbrOccurence(int nbrOccurence) {
 		this.nbrOccurence = nbrOccurence;
-	}
-	/**
-	 * @return the pages
-	 */
-	public ArrayList<Page> getPages() {
-		return pages;
-	}
-	/**
-	 * @param pages the pages to set
-	 */
-	public void setPages(ArrayList<Page> pages) {
-		this.pages = pages;
 	}
 	
 	/**
